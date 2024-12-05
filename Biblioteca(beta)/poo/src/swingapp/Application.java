@@ -19,7 +19,7 @@ import javax.swing.JTextField;
 public class Application {
     public static void main(String[] args) {
         // Criar a janela principal
-        JFrame frame = new JFrame("Aplicativo Simples");
+        JFrame frame = new JFrame("Biblioteca Virtual");
 
         // Definir o layout da janela
         frame.getContentPane().setLayout(new BorderLayout());
@@ -234,15 +234,12 @@ class RegisterBookWindow {
         JLabel isbnLabel = new JLabel("ISBN:");
         JTextField isbnField = new JTextField(20);
 
-        JLabel idLabel = new JLabel("ID:");
-        JTextField idField = new JTextField(20);
-
         // Botão para salvar o cadastro do livro
         JButton saveBookButton = new JButton("Salvar Cadastro");
         saveBookButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String bookDetails = "Nome: " + nameField.getText() + ", Autor: " + authorField.getText() + ", ISBN: " + isbnField.getText() + ", ID: " + idField.getText();
+                String bookDetails = "Nome: " + nameField.getText() + ", Autor: " + authorField.getText() + ", ISBN: " + isbnField.getText();
                 // Salvar os dados do livro na lista
                 BooksWindow.books.add(bookDetails);
                 JOptionPane.showMessageDialog(registerBookFrame, "Livro cadastrado com sucesso!");
@@ -265,8 +262,6 @@ class RegisterBookWindow {
         registerBookFrame.add(authorField);
         registerBookFrame.add(isbnLabel);
         registerBookFrame.add(isbnField);
-        registerBookFrame.add(idLabel);
-        registerBookFrame.add(idField);
         registerBookFrame.add(saveBookButton);
         registerBookFrame.add(backButton);
 
