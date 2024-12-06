@@ -5,15 +5,11 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 public class Application {
@@ -24,22 +20,27 @@ public class Application {
         // Definir o layout da janela
         frame.getContentPane().setLayout(new BorderLayout());
 
-        // Criar uma área de texto para mostrar os dados
-        JTextArea textArea = new JTextArea(10, 30);
-        textArea.setEditable(false); // Tornar a área de texto somente leitura
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        
         // Criar um painel com botões
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
+
+        // Botão "Emprestimo"
+        JButton loanButton = new JButton("Emprestimo");
+        loanButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Ao clicar, abre a janela de empréstimo
+                new LoanWindow();
+            }
+        });
 
         // Botão "Salvar"
         JButton saveButton = new JButton("Salvar Dados");
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ao clicar em salvar, exibe uma mensagem na área de texto
-                textArea.setText("Dados salvos com sucesso!");
+                // Ao clicar em salvar, exibe uma mensagem
+                JOptionPane.showMessageDialog(frame, "Dados salvos com sucesso!");
             }
         });
 
@@ -74,20 +75,13 @@ public class Application {
         });
 
         // Adicionar os botões ao painel
+        buttonPanel.add(loanButton);
         buttonPanel.add(saveButton);
         buttonPanel.add(exitButton);
         buttonPanel.add(booksButton);
         buttonPanel.add(registerUserButton);
 
-        // Criar a lista de usuários
-        JTextArea userListTextArea = new JTextArea(5, 30);
-        userListTextArea.setEditable(false);
-        userListTextArea.setText("Lista de Usuários:\n");
-        JScrollPane userListScrollPane = new JScrollPane(userListTextArea);
-
-        // Adicionar a lista de usuários e painel de botões à janela
-        frame.getContentPane().add(userListScrollPane, BorderLayout.NORTH);
-        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+        // Adicionar o painel de botões à janela
         frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
 
         // Configurar a janela principal
@@ -98,177 +92,59 @@ public class Application {
     }
 }
 
-class RegisterUserWindow {
-    private static ArrayList<String> users = new ArrayList<>(); // Lista de usuários cadastrados
-
-    public RegisterUserWindow() {
-        // Criar a janela de cadastro de usuário
-        JFrame registerFrame = new JFrame("Cadastrar Usuário");
+class LoanWindow {
+    public LoanWindow() {
+        // Criar a janela de empréstimo
+        JFrame loanFrame = new JFrame("Empréstimo de Livro");
 
         // Definir o layout da janela
-        registerFrame.setLayout(new GridLayout(4, 2));
+        loanFrame.setLayout(new GridLayout(4, 2));
 
-        // Criar campos de texto para nome e número de registro
-        JLabel nameLabel = new JLabel("Nome do Usuário:");
-        JTextField nameField = new JTextField(20);
+        // Criar os campos de texto e labels
+        JLabel userIdLabel = new JLabel("ID do Usuário:");
+        JTextField userIdField = new JTextField(20);
 
-        JLabel regNumberLabel = new JLabel("Número de Registro:");
-        JTextField regNumberField = new JTextField(20);
-
-        // Botão para salvar o cadastro
-        JButton saveButton = new JButton("Salvar Cadastro");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Adicionar o nome e o número de registro à lista de usuários
-                String user = nameField.getText() + " - Registro: " + regNumberField.getText();
-                users.add(user);
-                JOptionPane.showMessageDialog(registerFrame, "Usuário cadastrado com sucesso!");
-            }
-        });
-
-        // Botão para voltar à página inicial
-        JButton backButton = new JButton("Voltar");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                registerFrame.dispose(); // Fecha a janela de cadastro de usuário
-            }
-        });
-
-        // Adicionar os componentes à janela
-        registerFrame.add(nameLabel);
-        registerFrame.add(nameField);
-        registerFrame.add(regNumberLabel);
-        registerFrame.add(regNumberField);
-        registerFrame.add(saveButton);
-        registerFrame.add(backButton);
-
-        // Configurar a nova janela
-        registerFrame.setSize(400, 200);
-        registerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        registerFrame.setLocationRelativeTo(null); // Centralizar a janela
-        registerFrame.setVisible(true); // Tornar a nova janela visível
-    }
-}
-
-class BooksWindow {
-    static ArrayList<String> books = new ArrayList<>(); // Lista de livros cadastrados
-
-    public BooksWindow() {
-        // Criar a nova janela para mostrar os livros
-        JFrame booksFrame = new JFrame("Lista de Livros");
-
-        // Definir o layout da janela
-        booksFrame.setLayout(new BorderLayout());
-
-        // Lista de livros disponíveis
-        String[] booksArray = {
-            "O Senhor dos Anéis - J.R.R. Tolkien",
-            "Harry Potter e a Pedra Filosofal - J.K. Rowling",
-            "1984 - George Orwell",
-            "O Grande Gatsby - F. Scott Fitzgerald",
-            "Dom Casmurro - Machado de Assis"
-        };
-
-        // Criar uma área de texto para mostrar os livros
-        JTextArea booksTextArea = new JTextArea(10, 30);
-        booksTextArea.setEditable(false); // Tornar a área de texto somente leitura
-        booksTextArea.setText(String.join("\n", booksArray)); // Adiciona os livros à área de texto
-
-        JScrollPane scrollPane = new JScrollPane(booksTextArea);
-
-        // Criar o painel com botões de cadastro e voltar
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout());
-
-        // Botão de cadastro de livro
-        JButton registerBookButton = new JButton("Cadastrar Livro");
-        registerBookButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new RegisterBookWindow();
-            }
-        });
-
-        // Botão de voltar à página inicial
-        JButton backButton = new JButton("Voltar");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                booksFrame.dispose(); // Fecha a janela de livros
-            }
-        });
-
-        // Adicionar os botões ao painel
-        buttonPanel.add(registerBookButton);
-        buttonPanel.add(backButton);
-
-        // Adicionar a área de texto e o painel de botões à janela
-        booksFrame.add(scrollPane, BorderLayout.CENTER);
-        booksFrame.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Configurar a nova janela
-        booksFrame.setSize(400, 300);
-        booksFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente a janela dos livros
-        booksFrame.setLocationRelativeTo(null); // Centralizar a janela
-        booksFrame.setVisible(true); // Tornar a nova janela visível
-    }
-}
-
-class RegisterBookWindow {
-    public RegisterBookWindow() {
-        // Criar a janela de cadastro de livro
-        JFrame registerBookFrame = new JFrame("Cadastrar Livro");
-
-        // Definir o layout da janela
-        registerBookFrame.setLayout(new GridLayout(6, 2));
-
-        // Criar campos de texto para o nome do livro, autor, ISBN e ID
-        JLabel nameLabel = new JLabel("Nome do Livro:");
-        JTextField nameField = new JTextField(20);
-
-        JLabel authorLabel = new JLabel("Autor:");
-        JTextField authorField = new JTextField(20);
-
-        JLabel isbnLabel = new JLabel("ISBN:");
+        JLabel isbnLabel = new JLabel("ISBN do Livro:");
         JTextField isbnField = new JTextField(20);
 
-        // Botão para salvar o cadastro do livro
-        JButton saveBookButton = new JButton("Salvar Cadastro");
-        saveBookButton.addActionListener(new ActionListener() {
+        // Botão para realizar o empréstimo
+        JButton borrowButton = new JButton("Emprestar");
+        borrowButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String bookDetails = "Nome: " + nameField.getText() + ", Autor: " + authorField.getText() + ", ISBN: " + isbnField.getText();
-                // Salvar os dados do livro na lista
-                BooksWindow.books.add(bookDetails);
-                JOptionPane.showMessageDialog(registerBookFrame, "Livro cadastrado com sucesso!");
+                // Ao clicar em emprestar, exibe uma mensagem de sucesso
+                String userId = userIdField.getText();
+                String isbn = isbnField.getText();
+                if (!userId.isEmpty() && !isbn.isEmpty()) {
+                    JOptionPane.showMessageDialog(loanFrame, "Empréstimo realizado com sucesso!\nUsuário ID: " + userId + "\nISBN: " + isbn);
+                    loanFrame.dispose(); // Fecha a janela após o empréstimo
+                } else {
+                    JOptionPane.showMessageDialog(loanFrame, "Por favor, preencha todos os campos.");
+                }
             }
         });
 
-        // Botão para voltar à tela de livros
+        // Botão para voltar à página principal
         JButton backButton = new JButton("Voltar");
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                registerBookFrame.dispose(); // Fecha a janela de cadastro de livro
+                loanFrame.dispose(); // Fecha a janela de empréstimo
             }
         });
 
         // Adicionar os componentes à janela
-        registerBookFrame.add(nameLabel);
-        registerBookFrame.add(nameField);
-        registerBookFrame.add(authorLabel);
-        registerBookFrame.add(authorField);
-        registerBookFrame.add(isbnLabel);
-        registerBookFrame.add(isbnField);
-        registerBookFrame.add(saveBookButton);
-        registerBookFrame.add(backButton);
+        loanFrame.add(userIdLabel);
+        loanFrame.add(userIdField);
+        loanFrame.add(isbnLabel);
+        loanFrame.add(isbnField);
+        loanFrame.add(borrowButton);
+        loanFrame.add(backButton);
 
         // Configurar a nova janela
-        registerBookFrame.setSize(400, 300);
-        registerBookFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        registerBookFrame.setLocationRelativeTo(null); // Centralizar a janela
-        registerBookFrame.setVisible(true); // Tornar a nova janela visível
+        loanFrame.setSize(400, 200);
+        loanFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
+        loanFrame.setLocationRelativeTo(null); // Centralizar a janela
+        loanFrame.setVisible(true); // Tornar a nova janela visível
     }
 }
