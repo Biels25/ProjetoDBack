@@ -24,6 +24,8 @@ CREATE TABLE usuarios (
 CREATE TABLE emprestimos (
     usuario_id INT,
     livro_id INT,
+    data_emprestimo datetime DEFAULT current_timestamp,
+    data_devolucao datetime,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (livro_id) REFERENCES livros(id),
     PRIMARY KEY (usuario_id, livro_id)
