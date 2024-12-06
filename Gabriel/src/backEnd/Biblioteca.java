@@ -1,74 +1,18 @@
 package backEnd;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-
+import java.sql.*;
 import db.DB;
 
 public class Biblioteca {
-    private ArrayList<Livro> listaDeLivro;
-    private ArrayList<Usuario> listaDeUsuario;
-
-    public Biblioteca() {
-        listaDeLivro = new ArrayList<>();
-        listaDeUsuario = new ArrayList<>();
-        carregarListaDeLivro(); 
-        carregarListaDeUsuario();
-    }
-
-    // Método para carregar a lista de livros a partir do banco de dados
-    private void carregarListaDeLivro() {
-        try (Connection conn = DB.getConnection()) {
-            String query = "SELECT * FROM livros";
-            try (Statement stmt = conn.createStatement()) {
-                ResultSet rs = stmt.executeQuery(query);
-                while (rs.next()) {
-                    String titulo = rs.getString("titulo");
-                    String autor = rs.getString("autor");
-                    String isbn = rs.getString("isbn");
-                    boolean disponibilidade = rs.getBoolean("disponibilidade");
-                    Livro livro = new Livro(titulo, autor, isbn);
-                    livro.alterarDisponibilidade();  // Atualiza a disponibilidade conforme o banco
-                    listaDeLivro.add(livro);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Método para carregar a lista de usuários a partir do banco de dados
-    private void carregarListaDeUsuario() {
-        try (Connection conn = DB.getConnection()) {
-            String query = "SELECT * FROM usuarios";
-            try (Statement stmt = conn.createStatement()) {
-                ResultSet rs = stmt.executeQuery(query);
-                while (rs.next()) {
-                    String nome = rs.getString("nome");
-                    String numeroDeRegistro = rs.getString("numero_de_registro");
-                    Usuario usuario = new Usuario(nome, numeroDeRegistro);
-                    listaDeUsuario.add(usuario);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Método para cadastrar um livro no banco de dados
-    public boolean cadastrarLivro(String titulo, String autor, String ISBN) {
+    public static boolean cadastrarLivro(String titulo, String autor, String ISBN) {
         try (Connection conn = DB.getConnection()) {
             String query = "SELECT COUNT(*) FROM livros WHERE isbn = ?";
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, ISBN);
                 ResultSet rs = stmt.executeQuery();
                 rs.next();
-                if (rs.getInt(1) > 0) {  // Livro já existe
-                    return false;
+                if (rs.getInt(1) > 0) {
+                    return false;  // Livro já existe
                 }
             }
 
@@ -86,16 +30,15 @@ public class Biblioteca {
         }
     }
 
-    // Método para cadastrar um usuário no banco de dados
-    public boolean cadastrarUsuario(String nome, String numeroDeRegistro) {
+    public static boolean cadastrarUsuario(String nome, String numeroDeRegistro) {
         try (Connection conn = DB.getConnection()) {
             String query = "SELECT COUNT(*) FROM usuarios WHERE numero_de_registro = ?";
             try (PreparedStatement stmt = conn.prepareStatement(query)) {
                 stmt.setString(1, numeroDeRegistro);
                 ResultSet rs = stmt.executeQuery();
                 rs.next();
-                if (rs.getInt(1) > 0) {  // Usuário já existe
-                    return false;
+                if (rs.getInt(1) > 0) {
+                    return false;  // Usuário já existe
                 }
             }
 
@@ -112,50 +55,7 @@ public class Biblioteca {
         }
     }
 
-    // Método para listar livros disponíveis
-    public void livrosDisponiveis() {
-        try (Connection conn = DB.getConnection()) {
-            String query = "SELECT * FROM livros WHERE disponibilidade = TRUE";
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    String titulo = rs.getString("titulo");
-                    String autor = rs.getString("autor");
-                    String isbn = rs.getString("isbn");
-                    boolean disponibilidade = rs.getBoolean("disponibilidade");
-                    System.out.println("Título: " + titulo);
-                    System.out.println("Autor: " + autor);
-                    System.out.println("ISBN: " + isbn);
-                    System.out.println("Disponibilidade: " + (disponibilidade ? "Disponível" : "Indisponível"));
-                    System.out.println();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Método para listar usuários
-    public void usuariosDisponiveis() {
-        try (Connection conn = DB.getConnection()) {
-            String query = "SELECT * FROM usuarios";
-            try (PreparedStatement stmt = conn.prepareStatement(query)) {
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    String nome = rs.getString("nome");
-                    String numeroDeRegistro = rs.getString("numero_de_registro");
-                    System.out.println("Nome: " + nome);
-                    System.out.println("Número de Registro: " + numeroDeRegistro);
-                    System.out.println();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Método para emprestar um livro
-    public boolean emprestarLivro(String numeroDeRegistro, String ISBN) {
+    public static boolean emprestarLivro(String numeroDeRegistro, String ISBN) {
         try (Connection conn = DB.getConnection()) {
             // Verifica se o livro existe e está disponível
             String queryLivro = "SELECT id, disponibilidade FROM livros WHERE isbn = ?";
@@ -177,8 +77,8 @@ public class Biblioteca {
                     }
                     int usuarioId = rsUsuario.getInt("id");
 
-                    // Registra o empréstimo
-                    String insertEmprestimo = "INSERT INTO emprestimos (usuario_id, livro_id) VALUES (?, ?)";
+                    // Registra o empréstimo com a data de empréstimo
+                    String insertEmprestimo = "INSERT INTO emprestimos (usuario_id, livro_id, data_emprestimo) VALUES (?, ?, CURRENT_TIMESTAMP)";
                     try (PreparedStatement stmtEmprestimo = conn.prepareStatement(insertEmprestimo)) {
                         stmtEmprestimo.setInt(1, usuarioId);
                         stmtEmprestimo.setInt(2, livroId);
@@ -199,5 +99,82 @@ public class Biblioteca {
             return false;
         }
     }
-}
 
+    public static boolean devolverLivro(String numeroDeRegistro, String ISBN) {
+        try (Connection conn = DB.getConnection()) {
+            // Verifica se o empréstimo existe
+            String queryEmprestimo = """
+                SELECT emprestimos.id AS emprestimo_id, livros.id AS livro_id
+                FROM emprestimos
+                INNER JOIN livros ON emprestimos.livro_id = livros.id
+                INNER JOIN usuarios ON emprestimos.usuario_id = usuarios.id
+                WHERE livros.isbn = ? AND usuarios.numero_de_registro = ? AND emprestimos.data_devolucao IS NULL
+                """;
+            try (PreparedStatement stmt = conn.prepareStatement(queryEmprestimo)) {
+                stmt.setString(1, ISBN);
+                stmt.setString(2, numeroDeRegistro);
+                ResultSet rs = stmt.executeQuery();
+
+                if (!rs.next()) {
+                    return false;  // Nenhum empréstimo encontrado ou livro já foi devolvido
+                }
+
+                int emprestimoId = rs.getInt("emprestimo_id");
+                int livroId = rs.getInt("livro_id");
+
+                // Atualiza a data de devolução no empréstimo
+                String updateEmprestimo = "UPDATE emprestimos SET data_devolucao = CURRENT_TIMESTAMP WHERE id = ?";
+                try (PreparedStatement stmtUpdate = conn.prepareStatement(updateEmprestimo)) {
+                    stmtUpdate.setInt(1, emprestimoId);
+                    stmtUpdate.executeUpdate();
+                }
+
+                // Atualiza a disponibilidade do livro
+                String updateLivro = "UPDATE livros SET disponibilidade = TRUE WHERE id = ?";
+                try (PreparedStatement stmtUpdate = conn.prepareStatement(updateLivro)) {
+                    stmtUpdate.setInt(1, livroId);
+                    stmtUpdate.executeUpdate();
+                }
+
+                return true;  // Devolução realizada com sucesso
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void listarLivrosDisponiveis() {
+        try (Connection conn = DB.getConnection()) {
+            String query = "SELECT * FROM livros WHERE disponibilidade = TRUE";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    System.out.println("Título: " + rs.getString("titulo"));
+                    System.out.println("Autor: " + rs.getString("autor"));
+                    System.out.println("ISBN: " + rs.getString("isbn"));
+                    System.out.println("Disponibilidade: Disponível");
+                    System.out.println();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void listarUsuarios() {
+        try (Connection conn = DB.getConnection()) {
+            String query = "SELECT * FROM usuarios";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    System.out.println("Nome: " + rs.getString("nome"));
+                    System.out.println("Número de Registro: " + rs.getString("numero_de_registro"));
+                    System.out.println();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
