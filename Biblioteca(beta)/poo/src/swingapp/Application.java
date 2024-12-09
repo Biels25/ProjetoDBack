@@ -1,28 +1,22 @@
 package swingapp;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JScrollPane;
 
-import java.util.ArrayList;
+import backEnd.Biblioteca;
 
 public class Application {
-    static ArrayList<String> books = new ArrayList<>();
-	protected static Object users;
 
     public static void main(String[] args) {
+    	
+    	try {
+    	    Class.forName("com.mysql.cj.jdbc.Driver");
+    	} catch (ClassNotFoundException e) {
+    	    System.err.println("Erro ao carregar o driver do banco de dados: " + e.getMessage());
+    	}
+
         // Criar a janela principal
         JFrame frame = new JFrame("Biblioteca Virtual");
 
@@ -38,38 +32,16 @@ public class Application {
         loanButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ao clicar, abre a janela de empréstimo
-                new LoanWindow();
+                new LoanWindow(); // Abre a janela de empréstimo
             }
         });
 
-        // Botão "Salvar"
-        JButton saveButton = new JButton("Salvar Dados");
-        saveButton.addActionListener(new ActionListener() {
+        // Botão "Cadastrar Livro"
+        JButton registerBookButton = new JButton("Cadastrar Livro");
+        registerBookButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ao clicar em salvar, exibe uma mensagem
-                JOptionPane.showMessageDialog(frame, "Dados salvos com sucesso!");
-            }
-        });
-
-        // Botão "Sair"
-        JButton exitButton = new JButton("Sair");
-        exitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Ao clicar em sair, fecha o aplicativo
-                System.exit(0);
-            }
-        });
-
-        // Botão "Ver Livros"
-        JButton booksButton = new JButton("Ver Livros");
-        booksButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Ao clicar, abre a nova janela mostrando a lista de livros
-                new BooksWindow();
+                new RegisterBookWindow(); // Abre a janela de cadastro de livro
             }
         });
 
@@ -78,17 +50,29 @@ public class Application {
         registerUserButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Ao clicar, abre a janela de cadastro de usuário
-                new RegisterUserWindow();
+                new RegisterUserWindow(); // Abre a janela de cadastro de usuário
             }
         });
 
+        // Botão "Ver Livros"
+        JButton booksButton = new JButton("Ver Livros");
+        booksButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new BooksWindow(); // Abre a janela de visualização de livros
+            }
+        });
+
+        // Botão "Sair"
+        JButton exitButton = new JButton("Sair");
+        exitButton.addActionListener(e -> System.exit(0));
+
         // Adicionar os botões ao painel
         buttonPanel.add(loanButton);
-        buttonPanel.add(saveButton);
-        buttonPanel.add(exitButton);
-        buttonPanel.add(booksButton);
+        buttonPanel.add(registerBookButton);
         buttonPanel.add(registerUserButton);
+        buttonPanel.add(booksButton);
+        buttonPanel.add(exitButton);
 
         // Adicionar o painel de botões à janela
         frame.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
@@ -99,59 +83,36 @@ public class Application {
         frame.setLocationRelativeTo(null); // Centralizar a janela
         frame.setVisible(true); // Tornar a janela visível
     }
-
-    // Método para atualizar a lista de livros exibida na página principal
-    public static void updateBookList(JTextArea textArea) {
-        StringBuilder booksList = new StringBuilder("Livros Disponíveis:\n");
-        for (String book : books) {
-            booksList.append(book).append("\n");
-        }
-        textArea.setText(booksList.toString());
-    }
 }
 
 class LoanWindow {
     public LoanWindow() {
         // Criar a janela de empréstimo
         JFrame loanFrame = new JFrame("Empréstimo de Livro");
-
-        // Definir o layout da janela
         loanFrame.setLayout(new GridLayout(4, 2));
 
-        // Criar os campos de texto e labels
-        JLabel userIdLabel = new JLabel("ID do Usuário:");
-        JTextField userIdField = new JTextField(20);
+        JLabel userIdLabel = new JLabel("Registro do Usuário:");
+        JTextField userIdField = new JTextField();
 
         JLabel isbnLabel = new JLabel("ISBN do Livro:");
-        JTextField isbnField = new JTextField(20);
+        JTextField isbnField = new JTextField();
 
-        // Botão para realizar o empréstimo
         JButton borrowButton = new JButton("Emprestar");
-        borrowButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Ao clicar em emprestar, exibe uma mensagem de sucesso
-                String userId = userIdField.getText();
-                String isbn = isbnField.getText();
-                if (!userId.isEmpty() && !isbn.isEmpty()) {
-                    JOptionPane.showMessageDialog(loanFrame, "Empréstimo realizado com sucesso!\nUsuário ID: " + userId + "\nISBN: " + isbn);
-                    loanFrame.dispose(); // Fecha a janela após o empréstimo
-                } else {
-                    JOptionPane.showMessageDialog(loanFrame, "Por favor, preencha todos os campos.");
-                }
+        borrowButton.addActionListener(e -> {
+            String userId = userIdField.getText();
+            String isbn = isbnField.getText();
+
+            if (Biblioteca.emprestarLivro(userId, isbn)) {
+                JOptionPane.showMessageDialog(loanFrame, "Empréstimo realizado com sucesso!");
+                loanFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(loanFrame, "Erro ao realizar empréstimo. Verifique os dados.");
             }
         });
 
-        // Botão para voltar à página principal
         JButton backButton = new JButton("Voltar");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                loanFrame.dispose(); // Fecha a janela de empréstimo
-            }
-        });
+        backButton.addActionListener(e -> loanFrame.dispose());
 
-        // Adicionar os componentes à janela
         loanFrame.add(userIdLabel);
         loanFrame.add(userIdField);
         loanFrame.add(isbnLabel);
@@ -159,158 +120,121 @@ class LoanWindow {
         loanFrame.add(borrowButton);
         loanFrame.add(backButton);
 
-        // Configurar a nova janela
         loanFrame.setSize(400, 200);
-        loanFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        loanFrame.setLocationRelativeTo(null); // Centralizar a janela
-        loanFrame.setVisible(true); // Tornar a nova janela visível
+        loanFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        loanFrame.setLocationRelativeTo(null);
+        loanFrame.setVisible(true);
     }
 }
 
 class BooksWindow {
     public BooksWindow() {
-        // Criar a janela de livros
         JFrame booksFrame = new JFrame("Livros Disponíveis");
-
-        // Definir o layout da janela
         booksFrame.setLayout(new BorderLayout());
 
-        // Criar área de texto para mostrar os livros
         JTextArea bookListTextArea = new JTextArea(10, 30);
-        bookListTextArea.setEditable(false); // Tornar a área de texto somente leitura
+        bookListTextArea.setEditable(false);
         JScrollPane bookListScrollPane = new JScrollPane(bookListTextArea);
 
-        // Atualizar a lista de livros na área de texto
-        Application.updateBookList(bookListTextArea);
+        Biblioteca.listarLivrosDisponiveis(bookListTextArea);
 
-        // Botão para cadastrar um novo livro
-        JButton registerBookButton = new JButton("Cadastrar Livro");
-        registerBookButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new RegisterBookWindow(); // Abre a janela de cadastro de livro
-            }
-        });
-
-        // Adicionar os componentes à janela
-        booksFrame.add(bookListScrollPane, BorderLayout.CENTER);
-        booksFrame.add(registerBookButton, BorderLayout.SOUTH);
-
-        // Configurar a nova janela
-        booksFrame.setSize(400, 300);
-        booksFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        booksFrame.setLocationRelativeTo(null); // Centralizar a janela
-        booksFrame.setVisible(true); // Tornar a nova janela visível
-    }
-}
-
-class RegisterUserWindow {
-    public RegisterUserWindow() {
-        // Criar a janela de cadastro de usuário
-        JFrame registerUserFrame = new JFrame("Cadastrar Usuário");
-
-        // Definir o layout da janela
-        registerUserFrame.setLayout(new GridLayout(3, 2));
-
-        // Criar campos de texto para nome e ID
-        JLabel nameLabel = new JLabel("Nome do Usuário:");
-        JTextField nameField = new JTextField(20);
-
-        JLabel idLabel = new JLabel("ID do Usuário:");
-        JTextField idField = new JTextField(20);
-
-        // Botão para salvar o cadastro
-        JButton saveButton = new JButton("Salvar Cadastro");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Adicionar o nome e o ID à lista de usuários
-                String user = nameField.getText() + " - ID: " + idField.getText();
-                ((Container) Application.users).add(user);
-                JOptionPane.showMessageDialog(registerUserFrame, "Usuário cadastrado com sucesso!");
-                registerUserFrame.dispose(); // Fecha a janela de cadastro de usuário
-            }
-        });
-
-        // Botão para voltar à página principal
         JButton backButton = new JButton("Voltar");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                registerUserFrame.dispose(); // Fecha a janela de cadastro de usuário
-            }
-        });
+        backButton.addActionListener(e -> booksFrame.dispose());
 
-        // Adicionar os componentes à janela
-        registerUserFrame.add(nameLabel);
-        registerUserFrame.add(nameField);
-        registerUserFrame.add(idLabel);
-        registerUserFrame.add(idField);
-        registerUserFrame.add(saveButton);
-        registerUserFrame.add(backButton);
+        booksFrame.add(bookListScrollPane, BorderLayout.CENTER);
+        booksFrame.add(backButton, BorderLayout.SOUTH);
 
-        // Configurar a nova janela
-        registerUserFrame.setSize(400, 200);
-        registerUserFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        registerUserFrame.setLocationRelativeTo(null); // Centralizar a janela
-        registerUserFrame.setVisible(true); // Tornar a nova janela visível
+        booksFrame.setSize(400, 300);
+        booksFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        booksFrame.setLocationRelativeTo(null);
+        booksFrame.setVisible(true);
     }
 }
 
 class RegisterBookWindow {
     public RegisterBookWindow() {
-        // Criar a janela de cadastro de livro
         JFrame registerBookFrame = new JFrame("Cadastrar Livro");
-
-        // Definir o layout da janela
         registerBookFrame.setLayout(new GridLayout(4, 2));
 
-        // Criar campos de texto para título, ISBN e autor
-        JLabel titleLabel = new JLabel("Título do Livro:");
-        JTextField titleField = new JTextField(20);
-
-        JLabel isbnLabel = new JLabel("ISBN:");
-        JTextField isbnField = new JTextField(20);
+        JLabel titleLabel = new JLabel("Título:");
+        JTextField titleField = new JTextField();
 
         JLabel authorLabel = new JLabel("Autor:");
-        JTextField authorField = new JTextField(20);
+        JTextField authorField = new JTextField();
 
-        // Botão para salvar o cadastro do livro
-        JButton saveButton = new JButton("Salvar Livro");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Adicionar o livro à lista de livros
-                String book = titleField.getText() + " - ISBN: " + isbnField.getText() + " - Autor: " + authorField.getText();
-                Application.books.add(book);
+        JLabel isbnLabel = new JLabel("ISBN:");
+        JTextField isbnField = new JTextField();
+
+        JButton saveButton = new JButton("Salvar");
+        saveButton.addActionListener(e -> {
+            String titulo = titleField.getText();
+            String autor = authorField.getText();
+            String isbn = isbnField.getText();
+
+            if (Biblioteca.cadastrarLivro(titulo, autor, isbn)) {
                 JOptionPane.showMessageDialog(registerBookFrame, "Livro cadastrado com sucesso!");
-                registerBookFrame.dispose(); // Fecha a janela de cadastro de livro
+                registerBookFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(registerBookFrame, "Erro ao cadastrar livro. Verifique os dados.");
             }
         });
 
-        // Botão para voltar à página de livros
         JButton backButton = new JButton("Voltar");
-        backButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                registerBookFrame.dispose(); // Fecha a janela de cadastro de livro
-            }
-        });
+        backButton.addActionListener(e -> registerBookFrame.dispose());
 
-        // Adicionar os componentes à janela
         registerBookFrame.add(titleLabel);
         registerBookFrame.add(titleField);
-        registerBookFrame.add(isbnLabel);
-        registerBookFrame.add(isbnField);
         registerBookFrame.add(authorLabel);
         registerBookFrame.add(authorField);
+        registerBookFrame.add(isbnLabel);
+        registerBookFrame.add(isbnField);
         registerBookFrame.add(saveButton);
         registerBookFrame.add(backButton);
 
-        // Configurar a nova janela
         registerBookFrame.setSize(400, 200);
-        registerBookFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Fecha somente esta janela
-        registerBookFrame.setLocationRelativeTo(null); // Centralizar a janela
-        registerBookFrame.setVisible(true); // Tornar a nova janela visível
+        registerBookFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        registerBookFrame.setLocationRelativeTo(null);
+        registerBookFrame.setVisible(true);
+    }
+}
+
+class RegisterUserWindow {
+    public RegisterUserWindow() {
+        JFrame registerUserFrame = new JFrame("Cadastrar Usuário");
+        registerUserFrame.setLayout(new GridLayout(3, 2));
+
+        JLabel nameLabel = new JLabel("Nome:");
+        JTextField nameField = new JTextField();
+
+        JLabel registrationLabel = new JLabel("Registro:");
+        JTextField registrationField = new JTextField();
+
+        JButton saveButton = new JButton("Salvar");
+        saveButton.addActionListener(e -> {
+            String nome = nameField.getText();
+            String registro = registrationField.getText();
+
+            if (Biblioteca.cadastrarUsuario(nome, registro)) {
+                JOptionPane.showMessageDialog(registerUserFrame, "Usuário cadastrado com sucesso!");
+                registerUserFrame.dispose();
+            } else {
+                JOptionPane.showMessageDialog(registerUserFrame, "Erro ao cadastrar usuário. Verifique os dados.");
+            }
+        });
+
+        JButton backButton = new JButton("Voltar");
+        backButton.addActionListener(e -> registerUserFrame.dispose());
+
+        registerUserFrame.add(nameLabel);
+        registerUserFrame.add(nameField);
+        registerUserFrame.add(registrationLabel);
+        registerUserFrame.add(registrationField);
+        registerUserFrame.add(saveButton);
+        registerUserFrame.add(backButton);
+
+        registerUserFrame.setSize(400, 200);
+        registerUserFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        registerUserFrame.setLocationRelativeTo(null);
+        registerUserFrame.setVisible(true);
     }
 }
