@@ -1,26 +1,22 @@
-package swingapp;
+package backEnd;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import backEnd.Biblioteca;
+import java.sql.*;
 
 public class Application {
 
     public static void main(String[] args) {
-    	
-    	try {
-    	    Class.forName("com.mysql.cj.jdbc.Driver");
-    	} catch (ClassNotFoundException e) {
-    	    System.err.println("Erro ao carregar o driver do banco de dados: " + e.getMessage());
-    	}
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            System.err.println("Erro ao carregar o driver do banco de dados: " + e.getMessage());
+        }
 
         // Criar a janela principal
         JFrame frame = new JFrame("Biblioteca Virtual");
-
-        // Definir o layout da janela
         frame.getContentPane().setLayout(new BorderLayout());
 
         // Criar um painel com botões
@@ -63,6 +59,15 @@ public class Application {
             }
         });
 
+        // Botão "Devolver Livro"
+        JButton returnButton = new JButton("Devolver Livro");
+        returnButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new ReturnWindow(); // Abre a janela de devolução de livro
+            }
+        });
+
         // Botão "Sair"
         JButton exitButton = new JButton("Sair");
         exitButton.addActionListener(e -> System.exit(0));
@@ -72,6 +77,7 @@ public class Application {
         buttonPanel.add(registerBookButton);
         buttonPanel.add(registerUserButton);
         buttonPanel.add(booksButton);
+        buttonPanel.add(returnButton);
         buttonPanel.add(exitButton);
 
         // Adicionar o painel de botões à janela
@@ -99,14 +105,20 @@ class LoanWindow {
 
         JButton borrowButton = new JButton("Emprestar");
         borrowButton.addActionListener(e -> {
-            String userId = userIdField.getText();
-            String isbn = isbnField.getText();
+            String userId = userIdField.getText().trim();
+            String isbn = isbnField.getText().trim();
 
-            if (Biblioteca.emprestarLivro(userId, isbn)) {
-                JOptionPane.showMessageDialog(loanFrame, "Empréstimo realizado com sucesso!");
-                loanFrame.dispose();
+            if (userId.isEmpty() || isbn.isEmpty()) {
+                JOptionPane.showMessageDialog(loanFrame, "Por favor, preencha todos os campos.");
             } else {
-                JOptionPane.showMessageDialog(loanFrame, "Erro ao realizar empréstimo. Verifique os dados.");
+                if (Biblioteca.emprestarLivro(userId, isbn)) {
+                    JOptionPane.showMessageDialog(loanFrame, "Empréstimo realizado com sucesso!");
+                    userIdField.setText("");  // Limpa os campos
+                    isbnField.setText("");
+                    loanFrame.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(loanFrame, "Erro ao realizar empréstimo. Verifique os dados.");
+                }
             }
         });
 
@@ -126,6 +138,7 @@ class LoanWindow {
         loanFrame.setVisible(true);
     }
 }
+
 
 class BooksWindow {
     public BooksWindow() {
@@ -238,3 +251,54 @@ class RegisterUserWindow {
         registerUserFrame.setVisible(true);
     }
 }
+
+class ReturnWindow {
+    public ReturnWindow() {
+        // Criar a janela de devolução
+        JFrame returnFrame = new JFrame("Devolução de Livro");
+        returnFrame.setLayout(new GridLayout(4, 2));
+
+        JLabel userIdLabel = new JLabel("Registro do Usuário:");
+        JTextField userIdField = new JTextField();
+
+        JLabel isbnLabel = new JLabel("ISBN do Livro:");
+        JTextField isbnField = new JTextField();
+
+        JButton returnButton = new JButton("Devolver");
+        returnButton.addActionListener(e -> {
+            String userId = userIdField.getText().trim();
+            String isbn = isbnField.getText().trim();
+
+            if (userId.isEmpty() || isbn.isEmpty()) {
+                JOptionPane.showMessageDialog(returnFrame, "Por favor, preencha todos os campos.");
+            } else {
+                // Tenta devolver o livro
+                if (Biblioteca.devolverLivro(userId, isbn)) {
+                    JOptionPane.showMessageDialog(returnFrame, "Livro devolvido com sucesso!");
+                    userIdField.setText("");  // Limpa os campos
+                    isbnField.setText("");
+                    returnFrame.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(returnFrame, "Erro ao devolver livro. Verifique os dados.");
+                }
+            }
+        });
+
+        JButton backButton = new JButton("Voltar");
+        backButton.addActionListener(e -> returnFrame.dispose());
+
+        returnFrame.add(userIdLabel);
+        returnFrame.add(userIdField);
+        returnFrame.add(isbnLabel);
+        returnFrame.add(isbnField);
+        returnFrame.add(returnButton);
+        returnFrame.add(backButton);
+
+        returnFrame.setSize(400, 200);
+        returnFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        returnFrame.setLocationRelativeTo(null);
+        returnFrame.setVisible(true);
+    }
+}
+
+

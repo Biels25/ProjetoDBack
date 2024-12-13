@@ -17,10 +17,17 @@ public class Biblioteca {
         }
     }
 
+    // Método para cadastrar um livro
     public static boolean cadastrarLivro(String titulo, String autor, String isbn) {
         String sql = "INSERT INTO livros (titulo, autor, isbn, disponibilidade) VALUES (?, ?, ?, TRUE)";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            if (titulo.isEmpty() || autor.isEmpty() || isbn.isEmpty()) {
+                System.err.println("Todos os campos são obrigatórios.");
+                return false;
+            }
+            
             stmt.setString(1, titulo);
             stmt.setString(2, autor);
             stmt.setString(3, isbn);
@@ -32,10 +39,17 @@ public class Biblioteca {
         }
     }
 
+    // Método para cadastrar um usuário
     public static boolean cadastrarUsuario(String nome, String numeroDeRegistro) {
         String sql = "INSERT INTO usuarios (nome, numero_de_registro) VALUES (?, ?)";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            if (nome.isEmpty() || numeroDeRegistro.isEmpty()) {
+                System.err.println("Todos os campos são obrigatórios.");
+                return false;
+            }
+
             stmt.setString(1, nome);
             stmt.setString(2, numeroDeRegistro);
             stmt.executeUpdate();
@@ -46,6 +60,7 @@ public class Biblioteca {
         }
     }
 
+    // Método para emprestar um livro
     public static boolean emprestarLivro(String numeroDeRegistro, String isbn) {
         String selectUsuario = "SELECT id FROM usuarios WHERE numero_de_registro = ?";
         String selectLivro = "SELECT id, disponibilidade FROM livros WHERE isbn = ?";
@@ -60,7 +75,7 @@ public class Biblioteca {
 
             conn.setAutoCommit(false);
 
-            // Buscar ID do usuário
+            // Verificar existência do usuário
             stmtUsuario.setString(1, numeroDeRegistro);
             ResultSet rsUsuario = stmtUsuario.executeQuery();
             if (!rsUsuario.next()) {
@@ -69,7 +84,7 @@ public class Biblioteca {
             }
             int usuarioId = rsUsuario.getInt("id");
 
-            // Buscar ID do livro
+            // Verificar existência do livro
             stmtLivro.setString(1, isbn);
             ResultSet rsLivro = stmtLivro.executeQuery();
             if (!rsLivro.next()) {
@@ -84,7 +99,7 @@ public class Biblioteca {
                 return false;
             }
 
-            // Inserir o empréstimo
+            // Registrar empréstimo
             stmtEmprestimo.setInt(1, usuarioId);
             stmtEmprestimo.setInt(2, livroId);
             stmtEmprestimo.executeUpdate();
@@ -101,6 +116,52 @@ public class Biblioteca {
         }
     }
 
+    // Método para devolver livro
+    public static boolean devolverLivro(String usuarioId, String isbn) {
+        // Consultas SQL
+        String selectEmprestimo = "SELECT id FROM emprestimos WHERE usuario_id = ? AND livro_id = (SELECT id FROM livros WHERE isbn = ?) AND data_devolucao IS NULL";
+        String updateEmprestimo = "UPDATE emprestimos SET data_devolucao = CURDATE() WHERE id = ?";
+        String updateLivro = "UPDATE livros SET disponibilidade = TRUE WHERE isbn = ?";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement stmtEmprestimo = conn.prepareStatement(selectEmprestimo);
+             PreparedStatement stmtUpdateEmprestimo = conn.prepareStatement(updateEmprestimo);
+             PreparedStatement stmtUpdateLivro = conn.prepareStatement(updateLivro)) {
+
+            // Parametrizar a consulta
+            stmtEmprestimo.setString(1, usuarioId);  // ID do usuário
+            stmtEmprestimo.setString(2, isbn);  // ISBN do livro
+
+            // Executar a consulta para encontrar o empréstimo não devolvido
+            ResultSet rsEmprestimo = stmtEmprestimo.executeQuery();
+
+            if (rsEmprestimo.next()) {
+                // Se encontrou o empréstimo, pegar o ID do empréstimo
+                int emprestimoId = rsEmprestimo.getInt("id");
+
+                // Atualizar a devolução do empréstimo
+                stmtUpdateEmprestimo.setInt(1, emprestimoId);
+                stmtUpdateEmprestimo.executeUpdate();
+
+                // Atualizar a disponibilidade do livro
+                stmtUpdateLivro.setString(1, isbn);
+                stmtUpdateLivro.executeUpdate();
+
+                return true;  // Devolução bem-sucedida
+            } else {
+                System.err.println("Empréstimo não encontrado ou já foi devolvido.");
+                return false;  // Não encontrou o empréstimo válido
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao devolver livro: " + e.getMessage());
+            return false;  // Erro ao processar a devolução
+        }
+    }
+
+
+
+    // Método para listar livros disponíveis
     public static void listarLivrosDisponiveis(JTextArea textArea) {
         String sql = "SELECT titulo, autor, isbn FROM livros WHERE disponibilidade = TRUE";
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
