@@ -25,22 +25,13 @@ CREATE TABLE emprestimos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT NOT NULL,
     livro_id INT NOT NULL,
-    data_emprestimo DATE NOT NULL,
-    data_devolucao DATE,
+    data_emprestimo DATEtime default current_timestamp,
+    data_devolucao DATEtime,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
     FOREIGN KEY (livro_id) REFERENCES livros(id)
 );
 
 -- Criação da tabela para armazenar o histórico de empréstimos
-CREATE TABLE historico_emprestimos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL,
-    livro_id INT NOT NULL,
-    data_emprestimo DATE NOT NULL,
-    data_devolucao DATE NOT NULL,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    FOREIGN KEY (livro_id) REFERENCES livros(id)
-);
 
 -- Inserção de dados de exemplo na tabela de livros
 INSERT INTO livros (titulo, autor, isbn, disponibilidade) VALUES

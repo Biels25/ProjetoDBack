@@ -119,7 +119,13 @@ public class Biblioteca {
     // Método para devolver livro
     public static boolean devolverLivro(String usuarioId, String isbn) {
         // Consultas SQL
-        String selectEmprestimo = "SELECT id FROM emprestimos WHERE usuario_id = ? AND livro_id = (SELECT id FROM livros WHERE isbn = ?) AND data_devolucao IS NULL";
+        String selectEmprestimo = "SELECT e.id " +
+                                  "FROM emprestimos e " +
+                                  "JOIN usuarios u ON e.usuario_id = u.id " +
+                                  "JOIN livros l ON e.livro_id = l.id " +
+                                  "WHERE u.numero_de_registro = ? " +
+                                  "AND l.isbn = ? " +
+                                  "AND e.data_devolucao IS NULL";
         String updateEmprestimo = "UPDATE emprestimos SET data_devolucao = CURDATE() WHERE id = ?";
         String updateLivro = "UPDATE livros SET disponibilidade = TRUE WHERE isbn = ?";
 
@@ -128,9 +134,9 @@ public class Biblioteca {
              PreparedStatement stmtUpdateEmprestimo = conn.prepareStatement(updateEmprestimo);
              PreparedStatement stmtUpdateLivro = conn.prepareStatement(updateLivro)) {
 
-            // Parametrizar a consulta
-            stmtEmprestimo.setString(1, usuarioId);  // ID do usuário
-            stmtEmprestimo.setString(2, isbn);  // ISBN do livro
+            // Parametrizar a consulta para buscar o empréstimo
+            stmtEmprestimo.setString(1, usuarioId);  // Número de registro do usuário
+            stmtEmprestimo.setString(2, isbn);      // ISBN do livro
 
             // Executar a consulta para encontrar o empréstimo não devolvido
             ResultSet rsEmprestimo = stmtEmprestimo.executeQuery();
@@ -158,6 +164,7 @@ public class Biblioteca {
             return false;  // Erro ao processar a devolução
         }
     }
+
 
 
 

@@ -5,7 +5,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" path="Biblioteca(beta)/poo/src"/>
 	<classpathentry kind="src" path="Gabriel/src"/>
 	<classpathentry exported="true" kind="lib" path="C:/Users/Aluno/Desktop/ProjetoDBack/Gabriel/mysql-connector-j-9.0.0.jar"/>
 	<classpathentry kind="output" path="Biblioteca(beta)/poo/bin"/>
